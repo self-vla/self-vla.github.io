@@ -89,7 +89,10 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 600; letter-spacing: -0.01e
 /* ================================================================
    MASTHEAD  - left aligned, not the centred template
    ================================================================ */
-.masthead { position: relative; isolation: isolate; overflow: hidden; padding: 116px 0 52px; min-height: 480px; display: flex; align-items: center; border-bottom: 1px solid var(--rule); }
+.masthead { position: relative; isolation: isolate; overflow: hidden; padding: 116px 0 52px; min-height: 470px; display: grid; align-content: center; border-bottom: 1px solid var(--rule); }
+.masthead > .shell { width: 100%; }
+/* line the title up with the content column, which sits past the rail */
+@media (min-width: 1140px) { .masthead .hero-copy { padding-left: 242px; } }
 @media (max-width: 760px) { .masthead { padding: 48px 0 30px; } }
 
 /* Backdrop: real rollout footage, blurred hard and pushed under a scrim so the
@@ -419,6 +422,7 @@ footer .mono { display: block; margin-top: 6px; }
     <div class="hero-scrim"></div>
   </div>
   <div class="shell">
+   <div class="hero-copy">
     <h1>SELF-VLA
       <span class="lede">A skill enhanced agentic vision-language-action framework for contact-rich disassembly</span>
     </h1>
@@ -429,6 +433,7 @@ footer .mono { display: block; margin-top: 6px; }
       <span class="sep">/</span>
       <a href="#comparison">Video results</a>
     </div>
+   </div>
   </div>
 </header>
 
