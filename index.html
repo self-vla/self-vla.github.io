@@ -806,31 +806,38 @@ function setVideoSource(v, file) {
   }
 }
 function wireVideos() {
-  if (!("IntersectionObserver" in window)) {
-    videos.forEach(function (v) { v.src = v.dataset.src; v.dataset.loaded = "1"; });
-    return;
+  function ensureSrc(v) {
+    if (v.dataset.loaded !== "1") { v.src = v.dataset.src; v.dataset.loaded = "1"; }
   }
-  var loader = new IntersectionObserver(function (entries) {
+  if (!("IntersectionObserver" in window)) { videos.forEach(ensureSrc); return; }
+
+  /* two screens ahead: attach the source and pull only the header (a few tens of
+     KB with +faststart), so the clip can start the moment it is asked to */
+  var prefetch = new IntersectionObserver(function (entries) {
     entries.forEach(function (e) {
       if (!e.isIntersecting) return;
       var v = e.target;
-      if (v.dataset.loaded !== "1") { v.src = v.dataset.src; v.dataset.loaded = "1"; }
-      loader.unobserve(v);
+      v.preload = "metadata";
+      ensureSrc(v);
+      prefetch.unobserve(v);
     });
-  }, { rootMargin: "500px 0px" });
+  }, { rootMargin: "200% 0px" });
 
-  /* one full viewport of slack on each side, so a clip is still running
-     when it scrolls back in, and resumes mid-clip rather than restarting */
+  /* on screen or just past its edge: play. Anything further out is paused so
+     bandwidth and decoders go to the clips the reader can actually see. A clip
+     resumes where it left off rather than restarting. */
   var player = new IntersectionObserver(function (entries) {
     entries.forEach(function (e) {
       var v = e.target;
       if (REDUCED) return;
-      if (e.isIntersecting) { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
-      else if (!v.paused) { v.pause(); }
+      if (e.isIntersecting) {
+        ensureSrc(v);                       /* never play() before the source is attached */
+        var p = v.play(); if (p && p.catch) p.catch(function () {});
+      } else if (!v.paused) { v.pause(); }
     });
-  }, { rootMargin: "100% 0px" });
+  }, { rootMargin: "30% 0px" });
 
-  videos.forEach(function (v) { loader.observe(v); player.observe(v); });
+  videos.forEach(function (v) { prefetch.observe(v); player.observe(v); });
 }
 
 /* ==================================================================
