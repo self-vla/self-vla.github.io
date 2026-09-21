@@ -100,16 +100,18 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 600; letter-spacing: -0.01e
 .hero-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
 .hero-clips {
   position: absolute; inset: -10%;
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  display: grid; gap: 14px;
   filter: blur(17px) saturate(.66) contrast(1.06); opacity: .62; transform: scale(1.05);
 }
-.hero-clips video, .hero-clips img { width: 100%; height: 100%; object-fit: cover; display: block; }
-@media (max-width: 760px) { .hero-clips { grid-template-columns: repeat(2, 1fr); filter: blur(15px) saturate(.68); opacity: .42; } }
+.hero-zone { display: grid; gap: 12px; min-height: 0; }
+.hero-zone.hands { filter: saturate(.55); }
+.hero-clips video, .hero-clips img { width: 100%; height: 100%; object-fit: cover; display: block; min-height: 0; }
+@media (max-width: 760px) { .hero-clips { filter: blur(15px) saturate(.68); opacity: .42; } .hero-clips { grid-template-columns: 1fr !important; } .hero-zone.hands { display: none; } }
 .hero-scrim {
   position: absolute; inset: 0;
   background:
     linear-gradient(180deg, rgba(247,245,239,.42) 0%, rgba(247,245,239,.72) 48%, var(--paper) 100%),
-    linear-gradient(90deg, rgba(247,245,239,.92) 0%, rgba(247,245,239,.62) 46%, rgba(247,245,239,.30) 100%);
+    linear-gradient(90deg, rgba(247,245,239,.78) 0%, rgba(247,245,239,.60) 46%, rgba(247,245,239,.30) 100%);
 }
 
 .masthead h1 {
@@ -599,13 +601,13 @@ footer .mono { display: block; margin-top: 6px; }
 var TRIALS = 50;
 
 var COMPONENTS = [
-  { key: "fan", label: "CPU fan",       note: "clip + screws" },
-  { key: "ram", label: "RAM",           note: "latch release" },
-  { key: "gpu", label: "Graphics card", note: "slot lever" },
-  { key: "con", label: "Connector",     note: "cable seat" },
-  { key: "ssd", label: "SSD",           note: "screw + slide" },
-  { key: "hdd", label: "HDD",           note: "caddy rails" },
-  { key: "cpu", label: "CPU",           note: "bracket unlock" }
+  { key: "fan", label: "CPU fan",       note: "Small grasp point, vertical pull" },
+  { key: "ram", label: "RAM",           note: "Thin part, strict vertical pull" },
+  { key: "gpu", label: "Graphics card", note: "Two-step release" },
+  { key: "con", label: "Connector",     note: "Locate, then vertical pull" },
+  { key: "ssd", label: "SSD",           note: "Horizontal, one-step pull" },
+  { key: "hdd", label: "HDD",           note: "Horizontal, two-step pull" },
+  { key: "cpu", label: "CPU",           note: "Bracket unlock, confined pickup" }
 ];
 
 var COLUMNS = [
@@ -646,9 +648,14 @@ var ALTERNATE = {
                   note: "The policy lifts the caddy but loses it before the placement zone." }
 };
 
-/* Backdrop footage for the masthead. Blurred to the point of texture, so any
-   clip works; replace these four when the new material is captured. */
-var HERO_CLIPS = ["fan_pi_self", "hdd_oft_self", "cpu_pi_self", "ssd_oft_self"];
+/* Backdrop footage for the masthead, blurred to texture. Two zones:
+   left  = human-hand disassembly clips, tiled (drop the filenames in when recorded)
+   right = robot rollouts; a single 16:9 hero clip here fills the zone on its own
+   A zone with no entries is skipped and the other one takes the full width. */
+var HERO_CLIPS = {
+  left:  [],
+  right: ["fan_pi_self", "hdd_oft_self", "cpu_pi_self", "ssd_oft_self"]
+};
 
 var RECOVERY = [
   { file: "recovery_short", speed: "4x", caption: "The grasp check fails, the VLA-corrector regrasps, and the skill resumes." },
@@ -895,23 +902,30 @@ function wireVideos() {
 (function heroBackdrop() {
   var root = document.getElementById("hero-clips");
   if (!root) return;
-  HERO_CLIPS.forEach(function (f) {
-    if (REDUCED) {
-      var img = document.createElement("img");
-      img.src = "static/videos/" + f + "_poster.jpg";
-      img.alt = "";
-      root.appendChild(img);
-      return;
-    }
-    var v = document.createElement("video");
-    v.muted = true; v.loop = true; v.playsInline = true; v.preload = "none";
-    v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("loop", "");
-    v.setAttribute("poster", "static/videos/" + f + "_poster.jpg");
-    v.setAttribute("aria-hidden", "true");
-    v.dataset.src = "static/videos/" + f + ".mp4";
-    root.appendChild(v);
-    videos.push(v);
-  });
+  function zone(files, cls) {
+    if (!files.length) return null;
+    var z = el("div", "hero-zone " + cls);
+    z.style.gridTemplateColumns = files.length === 1 ? "1fr" : "repeat(2, 1fr)";
+    files.forEach(function (f) {
+      if (REDUCED) {
+        var img = document.createElement("img");
+        img.src = "static/videos/" + f + "_poster.jpg"; img.alt = "";
+        z.appendChild(img); return;
+      }
+      var v = document.createElement("video");
+      v.muted = true; v.loop = true; v.playsInline = true; v.preload = "none";
+      v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("loop", "");
+      v.setAttribute("poster", "static/videos/" + f + "_poster.jpg");
+      v.setAttribute("aria-hidden", "true");
+      v.dataset.src = "static/videos/" + f + ".mp4";
+      z.appendChild(v); videos.push(v);
+    });
+    return z;
+  }
+  var L = zone(HERO_CLIPS.left, "hands"), R = zone(HERO_CLIPS.right, "robot");
+  if (L) root.appendChild(L);
+  if (R) root.appendChild(R);
+  root.style.gridTemplateColumns = (L && R) ? "44fr 56fr" : "1fr";
 })();
 
 /* ==================================================================
