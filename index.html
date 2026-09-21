@@ -349,13 +349,12 @@ figcaption b { color: var(--ink-2); font-weight: 600; }
 /* ================================================================
    FULL TRIALS  - horizontal snap strip
    ================================================================ */
-.trials {
-  display: grid; grid-auto-flow: column; grid-auto-columns: min(78vw, 520px); gap: 18px;
-  overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
-  padding: 2px 2px 14px; margin: 0 -2px;
-  scrollbar-width: thin; scrollbar-color: var(--rule-2) transparent;
-}
-.trial { margin: 0; scroll-snap-align: start; }
+.trials { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 16px; }
+.trial { margin: 0; min-width: 0; }
+.trial.wide { grid-column: 1 / -1; margin-top: 8px; }
+.trial.wide figcaption b { font-size: 17px; }
+@media (max-width: 900px) { .trials { grid-template-columns: repeat(2, minmax(0, 1fr)); } .trial.wide { grid-column: 1 / -1; } }
+@media (max-width: 560px) { .trials { grid-template-columns: 1fr; } }
 .trial-stage { aspect-ratio: 16 / 9; overflow: hidden; border-radius: var(--radius); border: 1px solid var(--rule); background: var(--surface-2); }
 .trial-stage video { width: 100%; height: 100%; object-fit: cover; display: block; }
 .trial figcaption { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 8px; max-width: none; }
@@ -506,7 +505,7 @@ footer .mono { display: block; margin-top: 6px; }
       <section id="trials-section">
         <h2>Seven components, uncut</h2>
         <p class="deck">One complete trial per component with &pi;<sub>0.5</sub> SELF-VLA, from the first approach to the
-          placement, at 4&times; speed. Scroll sideways for the rest.</p>
+          placement, at 4&times; speed. The CPU, the hardest of the seven, gets the full width.</p>
         <div class="trials" id="trials"></div>
       </section>
 
@@ -684,7 +683,7 @@ var HERO_CLIPS = {
 };
 
 /* one complete, uncut trial per component, landscape, pi0.5 SELF-VLA */
-var TRIALS = [
+var FULL_TRIALS = [
   { key: "fan", file: "trial_fan" }, { key: "ram", file: "trial_ram" }, { key: "gpu", file: "trial_gpu" },
   { key: "con", file: "trial_con" }, { key: "ssd", file: "trial_ssd" }, { key: "hdd", file: "trial_hdd" },
   { key: "cpu", file: "trial_cpu" }
@@ -920,9 +919,9 @@ function wireVideos() {
   if (!root) return;
   var byKey = {};
   COMPONENTS.forEach(function (c) { byKey[c.key] = c; });
-  TRIALS.forEach(function (t) {
+  FULL_TRIALS.forEach(function (t) {
     var c = byKey[t.key];
-    var card = el("figure", "trial");
+    var card = el("figure", "trial" + (t.key === "cpu" ? " wide" : ""));
     var stage = el("div", "trial-stage");
     stage.appendChild(makeVideo(t.file, c.label + ", complete trial"));
     card.appendChild(stage);
