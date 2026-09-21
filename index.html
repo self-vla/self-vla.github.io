@@ -347,6 +347,22 @@ figcaption b { color: var(--ink-2); font-weight: 600; }
 @media (min-width: 861px) { .cell .mlab { display: none; } }
 
 /* ================================================================
+   FULL TRIALS  - horizontal snap strip
+   ================================================================ */
+.trials {
+  display: grid; grid-auto-flow: column; grid-auto-columns: min(78vw, 520px); gap: 18px;
+  overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+  padding: 2px 2px 14px; margin: 0 -2px;
+  scrollbar-width: thin; scrollbar-color: var(--rule-2) transparent;
+}
+.trial { margin: 0; scroll-snap-align: start; }
+.trial-stage { aspect-ratio: 16 / 9; overflow: hidden; border-radius: var(--radius); border: 1px solid var(--rule); background: var(--surface-2); }
+.trial-stage video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.trial figcaption { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 8px; max-width: none; }
+.trial figcaption b { color: var(--ink); font-weight: 600; font-size: 15px; }
+.trial figcaption span { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); text-align: right; }
+
+/* ================================================================
    RECOVERY STRIP
    ================================================================ */
 .strip { display: grid; gap: 22px; }
@@ -442,6 +458,7 @@ footer .mono { display: block; margin-top: 6px; }
 <div class="shell">
   <nav class="tocbar" aria-label="Sections">
     <a href="#abstract">Abstract</a>
+    <a href="#trials-section">Trials</a>
     <a href="#method">Method</a>
     <a href="#comparison">Comparison</a>
     <a href="#recovery">Recovery</a>
@@ -451,6 +468,7 @@ footer .mono { display: block; margin-top: 6px; }
   <div class="layout">
     <nav class="railnav" id="railnav" aria-label="Sections">
       <a href="#abstract">Abstract</a>
+      <a href="#trials-section">Trials</a>
       <a href="#method">Method</a>
       <a href="#comparison">Comparison</a>
       <a href="#recovery">Recovery</a>
@@ -482,6 +500,14 @@ footer .mono { display: block; margin-top: 6px; }
           <span class="t">percentage points of full-task success, averaged over seven components and both backbones,
             against the matching end-to-end policy.</span>
         </p>
+      </section>
+
+      <!-- ============================ FULL TRIALS ============================ -->
+      <section id="trials-section">
+        <h2>Seven components, uncut</h2>
+        <p class="deck">One complete trial per component with &pi;<sub>0.5</sub> SELF-VLA, from the first approach to the
+          placement, at 4&times; speed. Scroll sideways for the rest.</p>
+        <div class="trials" id="trials"></div>
       </section>
 
       <!-- ============================ METHOD ============================ -->
@@ -627,15 +653,15 @@ var RESULTS = [
 ];
 var SLUG_TO_ROW = { oft_e2e: 0, oft_self: 1, pi_e2e: 2, pi_self: 4 };
 
-/* outcome of the clip shown in each cell; absent keys have no clip yet */
+/* outcome of the clip shown in each cell */
 var OUTCOME = {
   fan_oft_e2e: "fail",  fan_oft_self: "success", fan_pi_e2e: "fail",    fan_pi_self: "success",
   ram_oft_e2e: "fail",  ram_oft_self: "success", ram_pi_e2e: "fail",    ram_pi_self: "success",
-                        gpu_oft_self: "success", gpu_pi_e2e: "success", gpu_pi_self: "success",
+  gpu_oft_e2e: "fail",  gpu_oft_self: "success", gpu_pi_e2e: "success", gpu_pi_self: "success",
   con_oft_e2e: "fail",  con_oft_self: "success", con_pi_e2e: "fail",    con_pi_self: "success",
   ssd_oft_e2e: "fail",  ssd_oft_self: "success", ssd_pi_e2e: "fail",    ssd_pi_self: "success",
   hdd_oft_e2e: "fail",  hdd_oft_self: "success", hdd_pi_e2e: "success", hdd_pi_self: "success",
-                        cpu_oft_self: "success", cpu_pi_e2e: "fail",    cpu_pi_self: "success"
+  cpu_oft_e2e: "fail",  cpu_oft_self: "success", cpu_pi_e2e: "fail",    cpu_pi_self: "success"
 };
 
 /* cells where a trial with the opposite outcome is also on record */
@@ -654,8 +680,15 @@ var ALTERNATE = {
    A zone with no entries is skipped and the other one takes the full width. */
 var HERO_CLIPS = {
   left:  [],
-  right: ["fan_pi_self", "hdd_oft_self", "cpu_pi_self", "ssd_oft_self"]
+  right: ["bg_cpu", "bg_gpu", "bg_hdd", "bg_ssd"]   /* 480x270 renditions of the full trials */
 };
+
+/* one complete, uncut trial per component, landscape, pi0.5 SELF-VLA */
+var TRIALS = [
+  { key: "fan", file: "trial_fan" }, { key: "ram", file: "trial_ram" }, { key: "gpu", file: "trial_gpu" },
+  { key: "con", file: "trial_con" }, { key: "ssd", file: "trial_ssd" }, { key: "hdd", file: "trial_hdd" },
+  { key: "cpu", file: "trial_cpu" }
+];
 
 var RECOVERY = [
   { file: "recovery_short", speed: "4x", caption: "The grasp check fails, the VLA-corrector regrasps, and the skill resumes." },
@@ -880,6 +913,25 @@ function wireVideos() {
 })();
 
 /* ==================================================================
+   FULL TRIALS
+   ================================================================== */
+(function renderTrials() {
+  var root = document.getElementById("trials");
+  if (!root) return;
+  var byKey = {};
+  COMPONENTS.forEach(function (c) { byKey[c.key] = c; });
+  TRIALS.forEach(function (t) {
+    var c = byKey[t.key];
+    var card = el("figure", "trial");
+    var stage = el("div", "trial-stage");
+    stage.appendChild(makeVideo(t.file, c.label + ", complete trial"));
+    card.appendChild(stage);
+    card.appendChild(el("figcaption", "", "<b>" + c.label + "</b><span>" + c.note + "</span>"));
+    root.appendChild(card);
+  });
+})();
+
+/* ==================================================================
    RECOVERY STRIP
    ================================================================== */
 (function renderRecovery() {
@@ -905,7 +957,7 @@ function wireVideos() {
   function zone(files, cls) {
     if (!files.length) return null;
     var z = el("div", "hero-zone " + cls);
-    z.style.gridTemplateColumns = files.length === 1 ? "1fr" : "repeat(2, 1fr)";
+    z.style.gridTemplateColumns = "repeat(" + Math.min(files.length, 4) + ", 1fr)";
     files.forEach(function (f) {
       if (REDUCED) {
         var img = document.createElement("img");
