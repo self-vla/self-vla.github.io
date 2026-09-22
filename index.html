@@ -558,7 +558,7 @@ footer .mono { display: block; margin-top: 6px; }
         <div class="band">
           <div class="band-inner">
             <h3>How SELF-VLA runs a trial</h3>
-            <p class="deck">Nine steps, including the branch taken when the failure detector fires, each paired with the side
+            <p class="deck">Eight steps, including the branch taken when the failure detector fires, each paired with the side
               and wrist camera footage of one CPU trial. Step through it, or select any module to read what it does.</p>
 
             <div class="pipe-wrap">
@@ -734,18 +734,18 @@ var ZONES = [
 var NODES = [
   { id: "lang", x: 32,   y: 72,  w: 138, h: 52,  t: ["Language Prompt"],        s: "Task instruction", step: 1 },
   { id: "obs",  x: 32,   y: 150, w: 138, h: 100, t: ["Observation"],            s: "Scene + wrist",    step: 1 },
-  { id: "hist", x: 236,  y: 68,  w: 90,  h: 56,  t: ["State", "History"],       s: "",                 step: 4 },
-  { id: "tcls", x: 334,  y: 68,  w: 92,  h: 56,  t: ["Temporal", "Classifier"], s: "",                 step: 4 },
-  { id: "gate", x: 434,  y: 68,  w: 86,  h: 56,  t: ["Handoff", "Gate"],        s: "",                 step: 4 },
+  { id: "hist", x: 236,  y: 68,  w: 90,  h: 56,  t: ["State", "History"],       s: "",                 step: 3 },
+  { id: "tcls", x: 334,  y: 68,  w: 92,  h: 56,  t: ["Temporal", "Classifier"], s: "",                 step: 3 },
+  { id: "gate", x: 434,  y: 68,  w: 86,  h: 56,  t: ["Handoff", "Gate"],        s: "",                 step: 3 },
   { id: "plan", x: 256,  y: 190, w: 150, h: 48,  t: ["VLA-Planner"],            s: "",                 step: 2 },
-  { id: "ract", x: 236,  y: 268, w: 130, h: 52,  t: ["Robot", "Actions"],       s: "",                 step: 3 },
-  { id: "gact", x: 382,  y: 268, w: 130, h: 52,  t: ["Gripper", "Actions"],     s: "",                 step: 3 },
-  { id: "dis",  x: 598,  y: 70,  w: 130, h: 62,  t: ["Disassembly", "Skills"],  s: "",                 step: 6 },
-  { id: "fdet", x: 752,  y: 70,  w: 118, h: 62,  t: ["Failure", "Detection"],   s: "",                 step: 7 },
-  { id: "plc",  x: 924,  y: 70,  w: 124, h: 62,  t: ["Placement", "Skills"],    s: "",                 step: 9 },
-  { id: "corr", x: 622,  y: 232, w: 148, h: 52,  t: ["VLA-Corrector"],          s: "",                 step: 8 },
-  { id: "gst",  x: 816,  y: 226, w: 160, h: 64,  t: ["Gripper Actions", "(Stop-Token)"], s: "",         step: 8 },
-  { id: "ok",   x: 1096, y: 120, w: 132, h: 100, t: ["Success"],                s: "Component out",    step: 9 }
+  { id: "ract", x: 236,  y: 268, w: 130, h: 52,  t: ["Robot", "Actions"],       s: "",                 step: 2 },
+  { id: "gact", x: 382,  y: 268, w: 130, h: 52,  t: ["Gripper", "Actions"],     s: "",                 step: 2 },
+  { id: "dis",  x: 598,  y: 70,  w: 130, h: 62,  t: ["Disassembly", "Skills"],  s: "",                 step: 5 },
+  { id: "fdet", x: 752,  y: 70,  w: 118, h: 62,  t: ["Failure", "Detection"],   s: "",                 step: 6 },
+  { id: "plc",  x: 924,  y: 70,  w: 124, h: 62,  t: ["Placement", "Skills"],    s: "",                 step: 8 },
+  { id: "corr", x: 622,  y: 232, w: 148, h: 52,  t: ["VLA-Corrector"],          s: "",                 step: 7 },
+  { id: "gst",  x: 816,  y: 226, w: 160, h: 64,  t: ["Gripper Actions", "(Stop-Token)"], s: "",         step: 7 },
+  { id: "ok",   x: 1096, y: 120, w: 132, h: 100, t: ["Success"],                s: "Component out",    step: 8 }
 ];
 
 var EDGES = [
@@ -768,45 +768,41 @@ var EDGES = [
    went through the correction branch. Marks are the logged events, in seconds of
    the encoded clip (event frame from events.tsv, offset and speed applied). */
 var STEP_MEDIA = {
-  1: { file: "fig2_s1", speed: "2x", marks: [] },
+  1: { still: "fig2_s1", hold: 4200 },
   2: { file: "fig2_s2", speed: "4x", marks: [] },
-  3: { file: "fig2_s3", speed: "2x", marks: [] },
-  4: { file: "fig2_s4", speed: "1x", marks: [{ t: 4.05, label: "Stop-token fires" }] },
-  5: { file: "fig2_s5", speed: "1x", marks: [{ t: 2.19, label: "Control passes to the skill" }] },
-  6: { file: "fig2_s6", speed: "4x", marks: [] },
-  7: { file: "fig2_s7", speed: "1x", marks: [{ t: 4.65, label: "Grasp check: failure" }] },
-  8: { file: "fig2_s8", speed: "4x", marks: [{ t: 4.6, label: "Corrector emits its stop-token" }, { t: 4.75, label: "Skill resumes" }] },
-  9: { file: "fig2_s9", speed: "4x", marks: [{ t: 4.95, label: "Placed" }] }
+  3: { file: "fig2_s4", speed: "4x", marks: [{ t: 3.01, label: "Stop-token fires" }] },
+  4: { file: "fig2_s5", speed: "2x", marks: [{ t: 2.1, label: "Control passes to the skill" }] },
+  5: { file: "fig2_s6", speed: "4x", marks: [] },
+  6: { file: "fig2_s7", speed: "2x", marks: [{ t: 1.0, label: "Failure detected: component not held" }] },
+  7: { file: "fig2_s8", speed: "4x", marks: [{ t: 4.6, label: "Corrector emits its stop-token" }, { t: 4.75, label: "Skill resumes" }] },
+  8: { file: "fig2_s9", speed: "4x", marks: [{ t: 4.95, label: "Placed" }] }
 };
 
 var STEPS = [
-  { k: "Step 1", h: "Observation and instruction",
-    b: "A scene camera and a wrist camera feed the current state; the task arrives as one natural-language instruction.",
+  { k: "Step 1", h: "Instruction and first observation",
+    b: "The language instruction is fixed for the trial: \u201cExtract the CPU from the bracket by unlocking it first, then extract the CPU and place it inside the yellow square area.\u201d The scene and wrist cameras provide the first observation.",
     n: ["lang", "obs"], e: ["e0", "e1"] },
-  { k: "Step 2", h: "The VLA-Planner takes control",
-    b: "The planner drives the free-space part of the task: approaching the component and positioning the gripper for contact.",
-    n: ["plan"], e: ["e0", "e1"] },
-  { k: "Step 3", h: "Robot and gripper actions",
-    b: "Each inference emits an end-effector action and a gripper command, executed on the arm at closed-loop rate.",
-    n: ["ract", "gact"], e: ["e2", "e3"] },
-  { k: "Step 4", h: "Stop-token prediction",
-    b: "A temporal classifier reads the recent state history and decides whether the approach phase is finished.",
+  { k: "Step 2", h: "The VLA-Planner drives the approach",
+    b: "The planner takes the observation and instruction and, at every inference, emits an end-effector action and a gripper command together. It positions the gripper for contact.",
+    n: ["plan", "ract", "gact"], e: ["e0", "e1", "e2", "e3"] },
+  { k: "Step 3", h: "Stop-token prediction",
+    b: "In parallel, a temporal classifier reads the recent state history and decides whether the approach phase is finished.",
     n: ["hist", "tcls", "gate"], e: ["e4", "e5"] },
-  { k: "Step 5", h: "Handoff to the skill",
+  { k: "Step 4", h: "Handoff to the skill",
     b: "Once the gate fires, control leaves the VLA policy and passes to the programmed skill for the contact-rich part.",
     n: ["gate", "dis"], e: ["e6"] },
-  { k: "Step 6", h: "Disassembly skill executes",
-    b: "The skill performs the scripted contact motion the policy struggles with: unlatching, unscrewing, levering, sliding.",
+  { k: "Step 5", h: "Disassembly skill executes",
+    b: "The skill performs the scripted contact motion the policy struggles with: unlocking the bracket, then lifting the CPU out.",
     n: ["dis"], e: ["e7"] },
-  { k: "Step 7", h: "Failure detection",
-    b: "A grasp check asks whether the component is actually held. A normal result goes to placement; a failure opens the correction branch.",
+  { k: "Step 6", h: "Failure detection",
+    b: "The failure detector watches every stage after the skill starts. When it finds the component is not held, it opens the correction branch; otherwise the trial goes on to placement.",
     n: ["fdet"], e: [] },
-  { k: "Step 8", h: "Correction, then resume",
+  { k: "Step 7", h: "Correction, then resume",
     b: "On failure the VLA-corrector regrasps and emits its own stop-token, handing control back so the trial continues instead of aborting.",
     n: ["fdet", "corr", "gst"], e: ["e8", "e9", "e10"] },
-  { k: "Step 9", h: "Placement and success",
-    b: "The placement skill transports the component to its bin. A trial counts as a success only if the whole sequence completes.",
-    n: ["plc", "ok"], e: ["e11", "e12"] }
+  { k: "Step 8", h: "Placement and success",
+    b: "The placement skill transports the component to its bin while the failure detector keeps watching. A trial counts as a success only if the whole sequence completes.",
+    n: ["fdet", "plc", "ok"], e: ["e11", "e12"] }
 ];
 
 /* ==================================================================
@@ -1152,10 +1148,20 @@ function wireVideos() {
     }
     pmRaf = requestAnimationFrame(pmTick);
   }
+  var pmHold = null;
   function pmLoad(stepIdx) {
     var m = STEP_MEDIA[stepIdx + 1];
     if (!m || !pmv) return;
+    clearTimeout(pmHold); pmHold = null;
     pmMark.classList.remove("on"); pmLastMark = -1; pmMarks = m.marks || [];
+    if (m.still) {
+      /* a held frame: show the poster, no playback, advance after the hold when auto-playing */
+      pmSpeed.textContent = "First frame";
+      pmv.pause(); pmv.removeAttribute("src"); pmv.dataset.file = "";
+      pmv.setAttribute("poster", "static/videos/" + m.still + "_poster.jpg"); pmv.load();
+      if (playing && !REDUCED) pmHold = setTimeout(function () { if (playing) go(cur + 1); }, m.hold || 4000);
+      return;
+    }
     pmSpeed.textContent = m.speed + " speed";
     pmv.setAttribute("poster", "static/videos/" + m.file + "_poster.jpg");
     if (pmv.dataset.file !== m.file) {
@@ -1200,14 +1206,16 @@ function wireVideos() {
     playing = true; ppBtn.textContent = "Pause";
     ppBtn.setAttribute("aria-label", "Pause the walkthrough");
     ppBtn.classList.add("primary");
+    if (STEP_MEDIA[cur + 1] && STEP_MEDIA[cur + 1].still && !pmHold) pmHold = setTimeout(function () { if (playing) go(cur + 1); }, STEP_MEDIA[cur + 1].hold || 4000);
     clearInterval(timer);
     timer = setInterval(function () {
       /* safety net: if the footage is stalled or missing, still move on */
+      if (pmHold) return;
       if (!pmv || pmv.readyState < 2 || pmv.paused) tick();
     }, 9000);
   }
   function stop() {
-    playing = false; ppBtn.textContent = "Play";
+    playing = false; ppBtn.textContent = "Play"; clearTimeout(pmHold); pmHold = null;
     ppBtn.setAttribute("aria-label", "Play the walkthrough");
     ppBtn.classList.remove("primary");
     clearInterval(timer); timer = null;
