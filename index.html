@@ -265,6 +265,21 @@ figcaption b { color: var(--ink-2); font-weight: 600; }
   .node, .edge, .n-box, .n-label { transition: none; }
 }
 
+.pipe-media { margin-top: 14px; }
+.pm-frame { position: relative; aspect-ratio: 32 / 9; overflow: hidden; border-radius: var(--radius); border: 1px solid var(--rule-2); background: var(--surface-2); }
+.pm-frame video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pm-frame::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: var(--paper); opacity: .9; }
+.pm-mark {
+  position: absolute; left: 50%; bottom: 10px; transform: translate(-50%, 6px);
+  font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  background: var(--ink); color: var(--accent-lit); padding: 6px 10px; border-radius: 4px;
+  opacity: 0; transition: opacity .15s ease, transform .15s ease; pointer-events: none; white-space: nowrap; z-index: 2;
+}
+.pm-mark.on { opacity: 1; transform: translate(-50%, 0); }
+.pm-cap { display: flex; justify-content: space-between; gap: 10px; margin-top: 7px; font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.pm-cap .pm-speed { color: var(--accent-ink); }
+@media (prefers-reduced-motion: reduce) { .pm-mark { transition: none; } }
+
 .pipe-side { display: flex; flex-direction: column; gap: 12px; }
 .pipe-ctrl { display: flex; align-items: center; gap: 8px; }
 .pipe-ctrl button {
@@ -543,11 +558,23 @@ footer .mono { display: block; margin-top: 6px; }
         <div class="band">
           <div class="band-inner">
             <h3>How SELF-VLA runs a trial</h3>
-            <p class="deck">Nine steps, including the branch taken when the failure detector fires. Step through it, or select
-              any module to read what it does.</p>
+            <p class="deck">Nine steps, including the branch taken when the failure detector fires, each paired with the side
+              and wrist camera footage of one CPU trial. Step through it, or select any module to read what it does.</p>
 
             <div class="pipe-wrap">
               <div class="pipe-stage" id="pipe-stage"></div>
+              <div class="pipe-media" id="pipe-media">
+                <div class="pm-frame">
+                  <video id="pm-video" muted playsinline preload="auto"
+                         aria-label="Side camera and wrist camera footage for the current step"></video>
+                  <div class="pm-mark" id="pm-mark" aria-live="polite"></div>
+                </div>
+                <div class="pm-cap">
+                  <span>Side camera</span>
+                  <span class="pm-speed" id="pm-speed"></span>
+                  <span>Wrist camera</span>
+                </div>
+              </div>
               <div class="pipe-under">
                 <div class="pipe-side">
                 <div class="pipe-ctrl">
@@ -736,6 +763,21 @@ var EDGES = [
   { id: "e11", d: "M870,101 L920,101", label: "Normal", lx: 895, ly: 92, anchor: "middle" },
   { id: "e12", d: "M1048,101 L1072,101 L1072,170 L1092,170" }
 ];
+
+/* Recorded footage for each step: side camera | wrist camera of one CPU trial that
+   went through the correction branch. Marks are the logged events, in seconds of
+   the encoded clip (event frame from events.tsv, offset and speed applied). */
+var STEP_MEDIA = {
+  1: { file: "fig2_s1", speed: "2x", marks: [] },
+  2: { file: "fig2_s2", speed: "4x", marks: [] },
+  3: { file: "fig2_s3", speed: "2x", marks: [] },
+  4: { file: "fig2_s4", speed: "1x", marks: [{ t: 4.05, label: "Stop-token fires" }] },
+  5: { file: "fig2_s5", speed: "1x", marks: [{ t: 2.19, label: "Control passes to the skill" }] },
+  6: { file: "fig2_s6", speed: "4x", marks: [] },
+  7: { file: "fig2_s7", speed: "1x", marks: [{ t: 4.65, label: "Grasp check: failure" }] },
+  8: { file: "fig2_s8", speed: "4x", marks: [{ t: 4.6, label: "Corrector emits its stop-token" }, { t: 4.75, label: "Skill resumes" }] },
+  9: { file: "fig2_s9", speed: "4x", marks: [{ t: 4.95, label: "Placed" }] }
+};
 
 var STEPS = [
   { k: "Step 1", h: "Observation and instruction",
@@ -1092,9 +1134,49 @@ function wireVideos() {
 
   var cur = -1, timer = null, playing = false;
 
+  /* recorded footage for the active step */
+  var pmv = document.getElementById("pm-video"), pmMark = document.getElementById("pm-mark"), pmSpeed = document.getElementById("pm-speed");
+  var pmMarks = [], pmRaf = null, pmShownUntil = 0, pmLastMark = -1;
+  function pmTick() {
+    if (!pmv.paused) {
+      var t = pmv.currentTime, now = performance.now();
+      for (var i = 0; i < pmMarks.length; i++) {
+        var m = pmMarks[i];
+        if (t >= m.t && t < m.t + 0.35 && pmLastMark !== i) {
+          pmMark.textContent = m.label; pmMark.classList.add("on");
+          pmShownUntil = now + 1500; pmLastMark = i;
+        }
+      }
+      if (now > pmShownUntil && pmMark.classList.contains("on")) pmMark.classList.remove("on");
+      if (t < 0.2) pmLastMark = -1;   /* a loop restarted: allow the marks to fire again */
+    }
+    pmRaf = requestAnimationFrame(pmTick);
+  }
+  function pmLoad(stepIdx) {
+    var m = STEP_MEDIA[stepIdx + 1];
+    if (!m || !pmv) return;
+    pmMark.classList.remove("on"); pmLastMark = -1; pmMarks = m.marks || [];
+    pmSpeed.textContent = m.speed + " speed";
+    pmv.setAttribute("poster", "static/videos/" + m.file + "_poster.jpg");
+    if (pmv.dataset.file !== m.file) {
+      pmv.dataset.file = m.file;
+      pmv.src = "static/videos/" + m.file + ".mp4";
+      pmv.load();
+    } else { pmv.currentTime = 0; }
+    if (!REDUCED) { var p = pmv.play(); if (p && p.catch) p.catch(function () {}); }
+    if (!pmRaf) pmRaf = requestAnimationFrame(pmTick);
+  }
+  if (pmv) {
+    pmv.addEventListener("ended", function () {
+      if (playing) { go(cur + 1); } else { pmv.currentTime = 0; var p = pmv.play(); if (p && p.catch) p.catch(function () {}); }
+    });
+    if (REDUCED) pmv.setAttribute("controls", "");
+  }
+
   function go(i) {
     cur = (i + STEPS.length) % STEPS.length;
     var st = STEPS[cur];
+    pmLoad(cur);
     var active = {};
     st.n.forEach(function (id) { active[id] = true; });
 
@@ -1119,7 +1201,10 @@ function wireVideos() {
     ppBtn.setAttribute("aria-label", "Pause the walkthrough");
     ppBtn.classList.add("primary");
     clearInterval(timer);
-    timer = setInterval(tick, 2600);
+    timer = setInterval(function () {
+      /* safety net: if the footage is stalled or missing, still move on */
+      if (!pmv || pmv.readyState < 2 || pmv.paused) tick();
+    }, 9000);
   }
   function stop() {
     playing = false; ppBtn.textContent = "Play";
@@ -1137,8 +1222,8 @@ function wireVideos() {
     /* only run while the diagram is on screen */
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
-        if (e.isIntersecting) { if (!timer && playing !== false) start(); }
-        else if (timer) { clearInterval(timer); timer = null; }
+        if (e.isIntersecting) { if (!timer && playing !== false) start(); if (pmv && pmv.paused && !REDUCED) { var pp = pmv.play(); if (pp && pp.catch) pp.catch(function () {}); } }
+        else if (timer) { clearInterval(timer); timer = null; if (pmv && !pmv.paused) pmv.pause(); }
       });
     }, { threshold: 0.25 });
     playing = true;
