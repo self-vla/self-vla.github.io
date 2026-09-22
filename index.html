@@ -281,6 +281,12 @@ figcaption b { color: var(--ink-2); font-weight: 600; }
 .pm-mark.on { opacity: 1; transform: translate(-50%, 0); }
 .pm-cap { display: flex; justify-content: space-between; gap: 10px; margin-top: 7px; font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
 .pm-cap .pm-speed { color: var(--accent-ink); }
+@media (max-width: 700px) {
+  .pm-frame { aspect-ratio: 8 / 9; }                                   /* side over wrist */
+  .pm-frame::after { top: 50%; bottom: auto; left: 0; right: 0; width: auto; height: 2px; }
+  .pm-cap { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .pm-cap span:nth-child(3)::before { content: "below: "; }
+}
 @media (prefers-reduced-motion: reduce) { .pm-mark { transition: none; } }
 
 .pipe-side { display: flex; flex-direction: column; gap: 12px; }
@@ -465,7 +471,7 @@ footer .mono { display: block; margin-top: 6px; }
       <span class="sep">/</span>
       <span>Anonymous authors</span>
       <span class="sep">/</span>
-      <a href="#comparison">Video results</a>
+      <a href="#trials-section">Video results</a>
     </div>
    </div>
   </div>
@@ -620,7 +626,9 @@ footer .mono { display: block; margin-top: 6px; }
       <section id="results">
         <h2>Quantitative results</h2>
         <p class="deck">Full-task success rate per component, 50 trials per cell. Error bars are 95% Wilson score intervals for
-          a binomial proportion; they describe sampling uncertainty over the 50 trials, not variation across training seeds.</p>
+          a binomial proportion; they describe sampling uncertainty over the 50 trials, not variation across training seeds.
+          The DINOv2 trigger is an ablation that replaces the stop-token predictor with a DINOv2-based classifier to decide
+          when to hand off from the planner to the skill.</p>
 
         <div class="chart-legend" id="chart-legend"></div>
         <div class="chart-card">
@@ -719,7 +727,7 @@ var FULL_TRIALS = [
 ];
 
 var RECOVERY = [
-  { file: "recovery_short", speed: "4x", caption: "The grasp check fails, the VLA-corrector regrasps, and the skill resumes." },
+  { file: "recovery_short_2x", speed: "2x", caption: "The grasp check fails, the VLA-corrector regrasps, and the skill resumes." },
   { file: "recovery_full",  speed: "4x", caption: "A full CPU trial end to end, including the correction and the placement." }
 ];
 
@@ -1159,6 +1167,8 @@ function wireVideos() {
     clearTimeout(pmHold);
     pmHold = setTimeout(function () { pmHold = null; if (playing) advance(); }, ms);
   }
+  var narrowQ = window.matchMedia ? window.matchMedia("(max-width: 700px)") : null;
+  function variant(name) { return name + ((narrowQ && narrowQ.matches) ? "_v" : ""); }   /* _v = side over wrist */
   function pmLoad(stepIdx) {
     var m = STEP_MEDIA[stepIdx + 1];
     if (!m || !pmv) return;
@@ -1167,16 +1177,17 @@ function wireVideos() {
     if (m.still) {
       pmSpeed.textContent = m.tag || "Held frame";
       pmv.pause(); pmv.removeAttribute("src"); pmv.dataset.file = "";
-      pmv.setAttribute("poster", "static/videos/" + m.still + "_poster.jpg"); pmv.load();
+      pmv.setAttribute("poster", "static/videos/" + variant(m.still) + "_poster.jpg"); pmv.load();
       if (m.label) { pmMark.textContent = m.label; pmMark.classList.add("on"); pmSticky = true; }
       if (playing && !REDUCED) schedule(m.hold || 3500);
       return;
     }
     pmSpeed.textContent = m.speed + " speed";
-    pmv.setAttribute("poster", "static/videos/" + m.file + "_poster.jpg");
-    if (pmv.dataset.file !== m.file) {
-      pmv.dataset.file = m.file;
-      pmv.src = "static/videos/" + m.file + ".mp4";
+    var f = variant(m.file);
+    pmv.setAttribute("poster", "static/videos/" + f + "_poster.jpg");
+    if (pmv.dataset.file !== f) {
+      pmv.dataset.file = f;
+      pmv.src = "static/videos/" + f + ".mp4";
       pmv.load();
     } else { pmv.currentTime = 0; }
     if (!REDUCED) { var p = pmv.play(); if (p && p.catch) p.catch(function () {}); }
