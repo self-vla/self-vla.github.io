@@ -772,15 +772,17 @@ var EDGES = [
    the encoded clip (event frame from events.tsv, offset and speed applied). */
 var STEP_MEDIA = {
   /* still: a held frame. file: a clip that plays once and then holds its last frame.
-     hold: how long auto-play stays on a held frame; after: pause after a clip ends before moving on. */
-  1: { still: "fig2_s1", hold: 4500, tag: "First observation" },
-  2: { file: "fig2_s2", speed: "4x", marks: [], after: 1000 },
-  3: { file: "fig2_s3", speed: "2x", marks: [{ t: 1.43, label: "Stop-token fires" }], after: 400 },
-  4: { still: "fig2_s4", hold: 3200, tag: "Held frame", label: "Control passes to the skill" },
-  5: { file: "fig2_s5", speed: "4x", marks: [], after: 600 },
-  6: { still: "fig2_s6", hold: 3600, tag: "Held frame", label: "Failure detected: component not held" },
-  7: { file: "fig2_s7", speed: "4x", marks: [{ t: 4.6, label: "Corrector emits its stop-token" }], after: 1000 },
-  8: { file: "fig2_s8", speed: "4x", marks: [{ t: 4.97, label: "Placed" }], after: 0 }
+     hold: how long auto-play stays on a held frame; after: pause after a clip ends before moving on.
+     Files carry a version prefix (wt3_): a regenerated clip must get a new name, never reuse one,
+     because the CDN and browsers cache videos by URL for a while. */
+  1: { still: "wt3_01_first_frame", hold: 4500, tag: "First observation" },
+  2: { file: "wt3_02_approach",   speed: "4x", marks: [], after: 1000 },
+  3: { file: "wt3_03_stop_token", speed: "2x", marks: [{ t: 1.43, label: "Stop-token fires" }], after: 400 },
+  4: { still: "wt3_04_handoff",   hold: 3200, tag: "Held frame", label: "Control passes to the skill" },
+  5: { file: "wt3_05_skill",      speed: "4x", marks: [], after: 600 },
+  6: { still: "wt3_06_failure",   hold: 3600, tag: "Held frame", label: "Failure detected: component not held" },
+  7: { file: "wt3_07_corrector",  speed: "4x", marks: [{ t: 4.62, label: "Corrector emits its stop-token" }], after: 1000 },
+  8: { file: "wt3_08_placement",  speed: "4x", marks: [{ t: 4.97, label: "Placed" }], after: 0 }
 };
 
 var STEPS = [
